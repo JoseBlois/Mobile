@@ -11,6 +11,9 @@ var btnShoot=new Button(170,270,20,20);
 var btnPause=new Button(90,0,20,20);
 var pause=false;
 var lastPress=null;
+var shots = [];
+var shotTimer=0;
+var lastUpdate=0;
 function Button(x,y,width,height){
     this.x = (x===undefined)?0:x;
     this.y = (y===undefined)?0:y;
@@ -123,7 +126,14 @@ function resize(){
 function run(){
     window.requestAnimationFrame(run);
 
-    act()
+    var now = Date.now();
+    var deltaTime = (now-lastUpdate)/1000;
+    if(deltaTime>1){
+        deltaTime = 0;
+    }
+    lastUpdate=now;
+
+    act(deltaTime)
     paint(ctx)
 }
 function paint(ctx){
@@ -138,30 +148,52 @@ function paint(ctx){
             ctx.fillText('ID: '+i+' X: '+touches[i].x+' Y: '+touches[i].y,10,10*i+20);
         }
     }
+    ctx.fillStyle='#fff';
+    for(i =0;i<shots.length;i++){
+        shots[i].fill(ctx);
+    }
     if(pause){
         ctx.textAlign='center'
         ctx.fillText('PAUSE',canvas.width/2,canvas.height/2)
     }
     ctx.textAlign='left'
     ctx.strokeStyle='#fff';;
-    ctx.fillStyle='#fff';
     player.fill(ctx)
     btnLeft.stroke(ctx);
     btnRight.stroke(ctx);
     btnShoot.stroke(ctx);
     btnPause.stroke(ctx);
 }
-function act(){
+function act(deltaTime){
     if(!pause){
+
         if(lastPress===1 &&btnPause.touch()){
             pause=true;
             lastPress=null;
         }
+
      if(btnRight.touch()){
          player.x+=5;
      }
+
      if(btnLeft.touch()){
          player.x-=5;
+     }
+
+     if(btnShoot.touch() && shotTimer===0){
+        shots.push(new Rectangle(player.x+2,player.y,5,5))
+        shotTimer=0.1;
+     }
+     for(var i =0,l = shots.length;i<l;i++){
+         shots[i].y-=10;
+         if(shots[i].y<0){
+             shots.splice(i--,1)
+             l--
+         }
+     }
+     shotTimer-=deltaTime;
+     if(shotTimer<0){
+         shotTimer=0;
      }
      if(player.x<0){
         player.x=0
