@@ -14,6 +14,8 @@ var lastPress=null;
 var shots = [];
 var shotTimer=0;
 var lastUpdate=0;
+var motionSupport=false;
+var accelerationX=0;
 function Button(x,y,width,height){
     this.x = (x===undefined)?0:x;
     this.y = (y===undefined)?0:y;
@@ -47,6 +49,14 @@ Rectangle.prototype.fill = function(ctx){
     ctx.fillRect(this.x,this.y,this.width,this.height);
 }
 function enableInputs(){
+    if(window.DeviceOrientationEvent){
+        motionSupport=true;
+        window.addEventListener('devicemotion',function(evt){
+            accelerationX = evt.accelerationIncludingGravity.x
+            //accelerationY = evt.accelerationIncludingGravity.y
+            //accelerationZ = evt.accelerationIncludingGravity.z
+        },false)
+    }
     canvas.addEventListener('touchstart',function(evt){
         var t = evt.changedTouches;
         for(var i = 0;i<t.length;i++){
@@ -152,6 +162,12 @@ function paint(ctx){
     for(i =0;i<shots.length;i++){
         shots[i].fill(ctx);
     }
+    ctx.fillStyle='#fff';
+    if(!motionSupport){
+        ctx.fillText('MOTION NOT SUPPORTED',30,30);
+    }
+    ctx.fillText('Acceleration: '+accelerationX,10,10);
+    
     if(pause){
         ctx.textAlign='center'
         ctx.fillText('PAUSE',canvas.width/2,canvas.height/2)
@@ -185,7 +201,7 @@ function act(deltaTime){
         shotTimer=0.1;
      }
      for(var i =0,l = shots.length;i<l;i++){
-         shots[i].y-=10;
+         shots[i].y-=120*deltaTime;
          if(shots[i].y<0){
              shots.splice(i--,1)
              l--
